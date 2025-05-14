@@ -1,19 +1,19 @@
-# Hardening de Acesso ao Zabbix com Nginx + HTTPS + Enganação de Atacantes
+# 🔒 Hardening de Acesso ao Zabbix com Nginx + HTTPS + Enganação de Atacantes
 
-Este guia prático documenta como proteger sua instância do Zabbix exposta na internet usando Nginx com HTTPS, cabeçalhos de segurança, controle de acesso por IP e DNS, e técnicas para disfarçar a presença do serviço de forma eficaz.
+Este guia prático documenta como proteger seu Zabbix exposto na internet usando Nginx com HTTPS, cabeçalhos seguros, controle de acesso por IP e DNS, além de técnicas para disfarçar a presença do serviço.
 
 ---
 
-## 🔐 Requisitos
+## 📌 Requisitos
 
 * Ubuntu/Debian com Nginx
 * Zabbix rodando localmente na porta `8080`
 * Domínio válido (ex: `zabbix.seudominio.com`)
-* Certbot para HTTPS com Let's Encrypt
+* Certbot para HTTPS (Let's Encrypt)
 
 ---
 
-## ⚖️ 1. Gerar Certificado HTTPS com Certbot
+## ✅ 1. Gerar Certificado HTTPS
 
 ```bash
 sudo apt install certbot python3-certbot-nginx -y
@@ -22,7 +22,7 @@ sudo certbot --nginx -d zabbix.seudominio.com
 
 ---
 
-## 📂 2. Configurar Nginx com proxy reverso seguro
+## ⚙️ 2. Configuração Segura do Proxy Reverso no Nginx
 
 **Arquivo:** `/etc/nginx/sites-available/default`
 
@@ -42,13 +42,13 @@ server {
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
+    # Cabeçalhos de segurança recomendados
     add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
     add_header X-Frame-Options "DENY" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self';" always;
 
     location / {
         satisfy any;
@@ -61,22 +61,27 @@ server {
 
         proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
+        proxy_set_header Connection "";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_buffering off;
+        proxy_request_buffering off;
+        chunked_transfer_encoding off;
     }
 
     location @log_denied {
         access_log /var/log/nginx/denied.log blocked;
-        return 404;
+        return 444;
     }
 }
 ```
 
 ---
 
-## 🔐 3. Isolar o backend (porta 8080)
+## 🔗 3. Isolar backend Zabbix
 
 **Arquivo:** `/etc/nginx/conf.d/zabbix.conf`
 
@@ -92,7 +97,7 @@ server {
         try_files $uri $uri/ =404;
     }
 
-    location ~ [^/]\.(php)(/|$) {
+    location ~ [^/]\.php(/|$) {
         fastcgi_pass unix:/var/run/php/zabbix.sock;
         fastcgi_param SCRIPT_FILENAME /usr/share/zabbix$fastcgi_script_name;
         include fastcgi_params;
@@ -102,11 +107,9 @@ server {
 
 ---
 
-## 🏡 4. Criar include com IP dinâmico
+## 🔄 4. Atualizar IP Dinâmico via DNS
 
-**Arquivo:** `/etc/nginx/whitelist.dns-allow.conf`
-
-Atualizado por script:
+**Arquivo:** `/usr/local/bin/update-zabbix-whitelist.sh`
 
 ```bash
 #!/bin/bash
@@ -115,7 +118,7 @@ IP=$(getent hosts "$DNS" | awk '{print $1}')
 [[ -n "$IP" ]] && echo "allow $IP;" > /etc/nginx/whitelist.dns-allow.conf && nginx -t && systemctl reload nginx
 ```
 
-Agende com `crontab -e`:
+Agendar via cron:
 
 ```cron
 */5 * * * * /usr/local/bin/update-zabbix-whitelist.sh
@@ -123,9 +126,9 @@ Agende com `crontab -e`:
 
 ---
 
-## 📃 5. Ativar logs de IPs negados
+## 📑 5. Configurar Logs de Tentativas Negadas
 
-**No `nginx.conf`** dentro de `http { ... }`:
+**Arquivo:** `/etc/nginx/nginx.conf` dentro do `http {}`:
 
 ```nginx
 log_format blocked '$remote_addr - [$time_local] "$request" denied';
@@ -134,18 +137,20 @@ access_log /var/log/nginx/denied.log blocked;
 
 ---
 
-## 🕵️‍♂️ 6. Enganar atacantes com 404 ou 444
+## 🛡️ 6. Enganação Silenciosa de Atacantes
 
-**Exemplo de handler discreto:**
+**Opções para bloqueio silencioso:**
+
+* Com retorno HTTP 444 (sem resposta):
 
 ```nginx
 location @log_denied {
     access_log /var/log/nginx/denied.log blocked;
-    return 444; # ou 404 se preferir
+    return 444;
 }
 ```
 
-Ou com uma página falsa:
+* Ou com página falsa:
 
 ```nginx
 location @log_denied {
@@ -158,11 +163,11 @@ location @log_denied {
 
 ---
 
-## 🚀 Conclusão
+## ✅ Conclusão
 
-Com esse conjunto de medidas, você protege sua instância do Zabbix com:
+Agora, sua instância do Zabbix possui:
 
-* HTTPS com cabeçalhos modernos
-* Acesso restrito por IP e DNS dinâmico
-* Backend inacessível diretamente
-* Logs e enganação para defesa silenciosa
+* Acesso protegido por HTTPS
+* Controle rígido por IP/DNS dinâmico
+* Backend isolado e protegido
+* Logs detalhados e bloqueio discreto de atacantes
