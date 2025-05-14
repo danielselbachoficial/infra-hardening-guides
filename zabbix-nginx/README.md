@@ -4,7 +4,7 @@ Guia técnico de práticas de segurança aplicadas a serviços de infraestrutura
 
 ## Índice de soluções
 
-* 🔐 [Zabbix via Nginx com HTTPS e ACLs](zabbix-nginx/zabbix-nginx-hardening.md)
+* 🔐 [Zabbix via Nginx com HTTPS e ACLs]([zabbix-nginx/zabbix-nginx-hardening.md](https://github.com/danielselbachoficial/infra-hardening-guides/blob/main/zabbix-nginx/zabbix-nginx-hardening.md))
 * 📊 Grafana com TLS e proteção contra brute-force
 * 📡 Prometheus com autenticação reversa
 * 🐳 Docker exposto de forma segura em nuvem
