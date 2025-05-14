@@ -52,8 +52,8 @@ server {
 
     location / {
         satisfy any;
-        allow 138.97.35.201;
-        allow 191.249.72.112;
+        allow <IP-PUBLICO>;
+        allow <IP-PUBLICO>;
         include /etc/nginx/whitelist.dns-allow.conf;
         deny all;
 
@@ -110,7 +110,7 @@ Atualizado por script:
 
 ```bash
 #!/bin/bash
-DNS="87d25470f4828151.sn.mynetname.net"
+DNS="<DDNS-NAME>"
 IP=$(getent hosts "$DNS" | awk '{print $1}')
 [[ -n "$IP" ]] && echo "allow $IP;" > /etc/nginx/whitelist.dns-allow.conf && nginx -t && systemctl reload nginx
 ```
