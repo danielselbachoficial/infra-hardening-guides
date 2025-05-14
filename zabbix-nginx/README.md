@@ -24,5 +24,5 @@ Este guia prático documenta como proteger seu Zabbix exposto na internet usando
 * Domínio válido (ex: `zabbix.seudominio.com`)
 * Certbot para HTTPS (Let's Encrypt)
 
-Consulte o [manual completo aqui]((https://github.com/danielselbachoficial/infra-hardening-guides/blob/main/zabbix-nginx/zabbix-nginx-hardening.md)).
+Consulte o [manual completo aqui](https://github.com/danielselbachoficial/infra-hardening-guides/blob/main/zabbix-nginx/zabbix-nginx-hardening.md).
 
