@@ -166,7 +166,3 @@ Com esse conjunto de medidas, você protege sua instância do Zabbix com:
 * Acesso restrito por IP e DNS dinâmico
 * Backend inacessível diretamente
 * Logs e enganação para defesa silenciosa
-
-Sinta-se à vontade para contribuir com melhorias ou automatizações.
-
-> Pull requests e estrelas são bem-vindos :)
