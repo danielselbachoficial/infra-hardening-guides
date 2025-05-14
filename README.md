@@ -17,9 +17,3 @@ Fortalecer a segurança de aplicações DevOps/Infra expostas, com foco em:
 - Restrição por IP e DNS
 - Logs e alertas de acesso negado
 - Disfarce de serviços contra scanners
-
----
-
-## Licença
-
-MIT
