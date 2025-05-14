@@ -1,6 +1,6 @@
-# 🔒 Hardening de Acesso ao Zabbix com Nginx + HTTPS + Enganação de Atacantes
+# 🔒 Hardening de Acesso ao Zabbix com Nginx + HTTPS + Cloudflare WAF
 
-Este guia prático documenta como proteger seu Zabbix exposto na internet usando Nginx com HTTPS, cabeçalhos seguros, controle de acesso por IP e DNS, além de técnicas para disfarçar a presença do serviço.
+Este guia prático documenta como proteger seu Zabbix exposto na internet usando Nginx com HTTPS, cabeçalhos seguros, Cloudflare como WAF, controle de acesso por IP e DNS, além de técnicas para disfarçar a presença do serviço.
 
 ---
 
@@ -10,6 +10,24 @@ Este guia prático documenta como proteger seu Zabbix exposto na internet usando
 * Zabbix rodando localmente na porta `8080`
 * Domínio válido (ex: `zabbix.seudominio.com`)
 * Certbot para HTTPS (Let's Encrypt)
+* Cloudflare com proxy ativado (nuvem laranja ☁️)
+* Firewall no host só permitindo conexões vindas da Cloudflare
+
+---
+
+## 🧱 Arquitetura Recomendada
+
+```
+Usuário Externo
+      ↓
+[ ☁️ Cloudflare WAF com ACLs + Obscuridade ]
+      ↓ (somente IPs da Cloudflare liberados)
+[ 🔥 Firewall local ]
+      ↓ (porta 443 liberada apenas para Cloudflare)
+[ 🌐 Nginx Proxy com TLS e Hardening ]
+      ↓ (Apenas localhost)
+[ 📊 Zabbix na porta 8080 ]
+```
 
 ---
 
@@ -49,11 +67,19 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+    add_header Server "";
+    add_header X-Powered-By "";
+
+    # Proteção contra Slowloris
+    client_body_timeout 10s;
+    client_header_timeout 10s;
+    keepalive_timeout 15s;
+    send_timeout 10s;
 
     location / {
         satisfy any;
-        allow <IP-PUBLICO>;
-        allow <IP-PUBLICO>;
+        allow <IP-CLOUDFLARE-1>;
+        allow <IP-CLOUDFLARE-2>;
         include /etc/nginx/whitelist.dns-allow.conf;
         deny all;
 
@@ -75,6 +101,11 @@ server {
     location @log_denied {
         access_log /var/log/nginx/denied.log blocked;
         return 444;
+    }
+
+    location ~* /(wp-admin|admin|phpmyadmin|upload|\.git) {
+        return 200 "OK";
+        access_log /var/log/nginx/denied.log blocked;
     }
 }
 ```
@@ -163,11 +194,59 @@ location @log_denied {
 
 ---
 
+## 🌐 Configuração do WAF na Cloudflare
+
+### 🔥 Regras de Firewall
+
+* **Permitir apenas IPs internos (ACL):**
+
+  ```
+  (http.host eq "zabbix.seudominio.com")
+  AND NOT (ip.src in {10.200.30.0/24 177.23.XX.XX})
+  ```
+
+  Ação: Block
+
+* **Bloquear outros países (opcional):**
+
+  ```
+  (http.host eq "zabbix.seudominio.com")
+  AND NOT (ip.geoip.country eq "BR")
+  ```
+
+  Ação: Block
+
+### 🤖 Bot Fight Mode
+
+* Ative em `Security → Bots → Bot Fight Mode` (modo avançado)
+
+### ⚠️ Proteção contra bruteforce
+
+* Proteja `index.php` com challenge:
+
+  ```
+  (http.host eq "zabbix.seudominio.com")
+  AND (http.request.uri.path contains "index.php")
+  ```
+
+  Ação: Managed Challenge
+
+### 🚦 Rate Limiting (opcional)
+
+* Limite acesso ao `/index.php` para evitar bruteforce:
+
+  * 5 requisições/minuto
+  * Ação: Block ou Challenge
+
+---
+
 ## ✅ Conclusão
 
 Agora, sua instância do Zabbix possui:
 
 * Acesso protegido por HTTPS
+* Proxy reverso com headers seguros
+* Proteção WAF e rate-limit com Cloudflare
 * Controle rígido por IP/DNS dinâmico
 * Backend isolado e protegido
 * Logs detalhados e bloqueio discreto de atacantes
