@@ -1,19 +1,28 @@
-# Infra Hardening Guides
+# 🔒 Hardening de Acesso ao Zabbix com Nginx + HTTPS + Enganação de Atacantes
 
-Guia técnico de práticas de segurança aplicadas a serviços de infraestrutura.
+Este guia prático documenta como proteger seu Zabbix exposto na internet usando Nginx com HTTPS, cabeçalhos seguros, controle de acesso por IP e DNS, além de técnicas para disfarçar a presença do serviço.
 
-## Índice de soluções
+---
 
-* 🔐 [Zabbix via Nginx com HTTPS e ACLs](https://github.com/danielselbachoficial/infra-hardening-guides/blob/main/zabbix-nginx/zabbix-nginx-hardening.md)
-* 📊 Grafana com TLS e proteção contra brute-force
-* 📡 Prometheus com autenticação reversa
-* 🐳 Docker exposto de forma segura em nuvem
+## 📌 Índice
 
-## Objetivo
+* [Requisitos](#requisitos)
+* [Gerar Certificado HTTPS](#gerar-certificado-https)
+* [Configuração Segura do Proxy Reverso no Nginx](#configuração-segura-do-proxy-reverso-no-nginx)
+* [Isolar backend Zabbix](#isolar-backend-zabbix)
+* [Atualizar IP Dinâmico via DNS](#atualizar-ip-dinâmico-via-dns)
+* [Configurar Logs de Tentativas Negadas](#configurar-logs-de-tentativas-negadas)
+* [Enganação Silenciosa de Atacantes](#enganação-silenciosa-de-atacantes)
+* [Conclusão](#conclusão)
 
-Fortalecer a segurança de aplicações DevOps/Infra expostas, com foco em:
+---
 
-* Proxy reverso seguro (HTTPS + headers)
-* Restrição por IP e DNS
-* Logs e alertas de acesso negado
-* Disfarce de serviços contra scanners
+## 📌 Requisitos
+
+* Ubuntu/Debian com Nginx
+* Zabbix rodando localmente na porta `8080`
+* Domínio válido (ex: `zabbix.seudominio.com`)
+* Certbot para HTTPS (Let's Encrypt)
+
+Consulte o [manual completo aqui]((https://github.com/danielselbachoficial/infra-hardening-guides/blob/main/zabbix-nginx/zabbix-nginx-hardening.md)).
+
