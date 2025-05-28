@@ -17,3 +17,9 @@ Fortalecer a segurança de aplicações DevOps/Infra expostas, com foco em:
 - Restrição por IP e DNS
 - Logs e alertas de acesso negado
 - Disfarce de serviços contra scanners
+
+Daniel Selbach<br>
+Instagram Daniel Selbach: https://www.instagram.com/danielselbach.com.br/<br>
+YouTube Daniel Selbach: https://www.youtube.com/@danielselbachoficial<br>
+Linkedin Daniel Selbach: https://www.linkedin.com/in/danielselbachoficial/<br>
+Github Daniel Selbach: https://github.com/danielselbachoficial<br>
