@@ -22,7 +22,7 @@ Usuário autorizado (IP confiável)
   ⬇  
 [ 🔒 `/etc/hosts.allow` — IPs permitidos ]  
   ⬇  
-[ 🚫 `/etc/hosts.deny` — bloqueia e loga todos os demais ]  
+[ 🚫 `/etc/hosts.deny` — bloqueia e loga todos os demais permitidos ]  
   ⬇  
 [ 🔥 UFW — permite apenas porta 22 ]  
   ⬇  
