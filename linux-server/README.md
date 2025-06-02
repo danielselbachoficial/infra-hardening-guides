@@ -1,43 +1,14 @@
-# 🔒 Hardening de Acesso ao Servidor via SSH com hosts.deny + Logs + UFW
+# 🛡️ Infra Hardening Guide para Servidores Linux
 
-Este repositório contém um guia prático para proteger servidores Linux (Ubuntu/Debian) com controle de acesso baseado em IP, usando:
-
-- `/etc/hosts.allow` e `/etc/hosts.deny` (TCP Wrappers)
-- Logging personalizado via `rsyslog`
-- Firewall UFW (Uncomplicated Firewall)
-- Monitoramento com `lnav`
-
-> **Ideal para:** Ambientes onde o acesso remoto via SSH precisa ser **restrito, rastreável e discreto**, como laboratórios, redes internas, servidores em DMZ ou expostos à internet.
+Este repositório é dedicado à documentação e prática de **Hardening de Infraestrutura** em servidores Linux, com foco em segurança de acesso, controle de rede, e visibilidade de logs.  
+Voltado para sysadmins, estudantes de segurança, e profissionais de redes que buscam **proteger seus servidores com técnicas tradicionais, eficazes e auditáveis.**
 
 ---
 
-## 📁 Conteúdo
+## 📂 Estrutura do Repositório
 
-- `manual.md` — Guia completo passo a passo
-- Exemplos de configuração (`hosts.allow`, `hosts.deny`)
-- Comandos para instalação, logging e firewall
-- Boas práticas de segurança
+```bash
+infra-hardening-linux/
+├── README.md               # Você está aqui
+├── hardening-ssh-hostsdeny-ufw-logs.md  # Hardening de Acesso ao Servidor via SSH com hosts.deny + Logs + UFW
 
----
-
-## 📌 Requisitos
-
-- Ubuntu Server 24.04 LTS ou Debian 12
-- Acesso root ou sudo
-- SSH ativo
-- UFW instalado e habilitado
-- IP confiável para liberar no acesso
-
----
-
-## 🧱 Arquitetura Resumida
-
-Usuário autorizado (IP confiável)
-↓
-[🔒 /etc/hosts.allow — IPs permitidos]
-↓
-[🚫 /etc/hosts.deny — bloqueio e log dos demais]
-↓
-[🔥 UFW — só porta 22 liberada]
-↓
-[🎯 OpenSSH ativo e monitorado]
