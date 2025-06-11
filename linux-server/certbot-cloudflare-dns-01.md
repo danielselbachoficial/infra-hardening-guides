@@ -120,6 +120,7 @@ Próximos Passos
 Após a validação bem-sucedida do dry-run, seu certificado será renovado automaticamente pelo Certbot.
 
 Você pode verificar o cronjob ou systemd timer do Certbot para entender a frequência das renovações automáticas (geralmente duas vezes ao dia).
+
 Para systemd:
 ```bash
 sudo systemctl list-timers | grep certbot
