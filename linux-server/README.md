@@ -9,6 +9,6 @@ Voltado para sysadmins, estudantes de segurança, e profissionais de redes que b
 
 ```bash
 infra-hardening-linux/
-├── README.md               # Você está aqui
+├── README.md                            # Você está aqui
 ├── hardening-ssh-hostsdeny-ufw-logs.md  # Hardening de Acesso ao Servidor via SSH com hosts.deny + Logs + UFW
-
+├── certbot-cloudflare-dns-01.md         # Configuração do Certbot com Desafio DNS-01 e Cloudflare
