@@ -120,7 +120,14 @@ Próximos Passos
 Após a validação bem-sucedida do dry-run, seu certificado será renovado automaticamente pelo Certbot.
 
 Você pode verificar o cronjob ou systemd timer do Certbot para entender a frequência das renovações automáticas (geralmente duas vezes ao dia).
-Para systemd: sudo systemctl list-timers | grep certbot
-Para cron: sudo cat /etc/cron.d/certbot ou sudo crontab -l
+Para systemd:
+```bash
+sudo systemctl list-timers | grep certbot
+```
+
+Para cron:
+```bash
+sudo cat /etc/cron.d/certbot ou sudo crontab -l
+```
 Monitore os logs do Certbot para quaisquer erros futuros durante as renovações: sudo tail -f /var/log/letsencrypt/letsencrypt.log
 Este guia fornece uma solução robusta e segura para gerenciar seus certificados SSL/TLS com o Certbot e Cloudflare.
