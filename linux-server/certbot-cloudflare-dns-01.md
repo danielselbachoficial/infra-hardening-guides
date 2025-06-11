@@ -1,13 +1,13 @@
 # Guia: Configuração do Certbot com Desafio DNS-01 e Cloudflare
 
-Este guia detalhado demonstra como configurar o Certbot para obter e renovar certificados SSL/TLS usando o desafio DNS-01, especificamente com o Cloudflare como provedor DNS. Esta abordagem é ideal para servidores que não expõem a porta 80 ou para cenários onde a validação HTTP-01 não é viável, como para instâncias do Grafana.
+Este guia detalhado demonstra como configurar o Certbot para obter e renovar certificados SSL/TLS usando o desafio DNS-01, especificamente com o Cloudflare como provedor DNS. Esta abordagem é ideal para servidores que não expõem a porta 80 ou para cenários onde a validação HTTP-01 não é viável, como para instâncias do nome-do-servidor.
 
 ---
 
 ## Pré-requisitos
 
 *   Uma conta ativa no Cloudflare com o seu domínio (`seudominio.com.br` no exemplo) gerenciado por ele.
-*   Acesso SSH ao seu servidor Linux (onde o Certbot e Grafana estão instalados) com privilégios `sudo`.
+*   Acesso SSH ao seu servidor Linux (onde o Certbot e nome-do-servidor estão instalados) com privilégios `sudo`.
 *   Certbot já instalado no seu servidor.
 
 ---
@@ -23,7 +23,7 @@ Este guia detalhado demonstra como configurar o Certbot para obter e renovar cer
     *   Clique em "Create Token".
     *   Role para baixo até a seção "Custom token" e clique em "Get started".
 5.  **Configure as Permissões do Token:**
-    *   **Token name:** Dê um nome descritivo para o token, como `Certbot_Grafana_Renewal` ou `Certbot_DNS_afsimtech`.
+    *   **Token name:** Dê um nome descritivo para o token, como `Certbot_Nome-do-servidor_Renewal` ou `Certbot_DNS_nome-da-empresa`.
     *   **Permissions:** Adicione as seguintes permissões para garantir que o Certbot possa ler e modificar registros DNS:
         *   `Zone` -> `Zone` -> `Read`
         *   `Zone` -> `DNS` -> `Edit`
@@ -31,7 +31,7 @@ Este guia detalhado demonstra como configurar o Certbot para obter e renovar cer
         *   Selecione `Specific zone` (Zona específica).
         *   No campo de busca, digite e selecione seu domínio, por exemplo, `seudominio.com.br`.
         *   **Isso é crucial:** Garante que o token só possa interagir com os registros DNS desse domínio específico.
-    *   **Client IP Address Filtering (Opcional, mas Recomendado):** Se o seu servidor Grafana possui um IP estático, adicione o IP público do seu servidor aqui. Isso restringe o uso do token apenas a requisições originadas desse IP, aumentando a segurança.
+    *   **Client IP Address Filtering (Opcional, mas Recomendado):** Se o seu servidor nome-do-servidor possui um IP estático, adicione o IP público do seu servidor aqui. Isso restringe o uso do token apenas a requisições originadas desse IP, aumentando a segurança.
 6.  **Continue para Sumário:** Clique em "Continue to summary".
 7.  **Crie o Token:** Clique em "Create token".
 8.  **Copie o Token:** O Cloudflare exibirá o token. **COPIE-O IMEDIATAMENTE**, pois ele não será exibido novamente. Guarde-o em um local seguro temporariamente (um bloco de notas, por exemplo), você precisará dele no próximo passo.
@@ -67,10 +67,10 @@ Agora, vamos instalar o plugin do Certbot para Cloudflare e configurar as creden
     Este comando garante que apenas o usuário `root` (e o Certbot com `sudo`) possa ler este arquivo, protegendo seu token de API.
 
 4.  **Atualizar a Configuração de Renovação Existente do Certificado:**
-    Precisamos informar ao Certbot para usar o plugin DNS-Cloudflare para futuras renovações do certificado do seu domínio (ex: `grafana.seudominio.com.br`).
+    Precisamos informar ao Certbot para usar o plugin DNS-Cloudflare para futuras renovações do certificado do seu domínio (ex: `nome-do-servidor.seudominio.com.br`).
 
     ```bash
-    sudo nano /etc/letsencrypt/renewal/grafana.seudominio.com.br.conf
+    sudo nano /etc/letsencrypt/renewal/nome-do-servidor.seudominio.com.br.conf
     ```
     Procure a seção `[renewalparams]` e faça as seguintes alterações/adições:
     *   Altere a linha `authenticator = standalone` para `authenticator = dns-cloudflare`.
@@ -80,7 +80,7 @@ Agora, vamos instalar o plugin do Certbot para Cloudflare e configurar as creden
     A seção `[renewalparams]` deverá ficar parecida com isto (ajuste se tiver outras linhas):
     ```ini
     [renewalparams]
-    account = acbbd81ec9647d29bb63252a5192150d
+    account = ID Account
     authenticator = dns-cloudflare
     server = https://acme-v02.api.letsencrypt.org/directory
     key_type = ecdsa
@@ -111,7 +111,7 @@ Se tudo correr bem, a saída final deverá ser similar a:
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Congratulations, all simulated renewals succeeded:
-/etc/letsencrypt/live/grafana.seudominio.com.br/fullchain.pem (success)
+/etc/letsencrypt/live/nome-do-servidor.seudominio.com.br/fullchain.pem (success)
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 Se o dry-run for bem-sucedido, significa que sua configuração para renovação com DNS-01 via Cloudflare está funcionando perfeitamente! As renovações automáticas (geralmente via cron ou systemd timer configurado pelo Certbot) não terão mais problemas com a porta 80.
