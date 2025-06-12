@@ -12,4 +12,4 @@ infra-hardening-linux/
 ├── README.md                                                      # Você está aqui
 ├── hardening-ssh-hostsdeny-ufw-logs.md                            # Hardening de Acesso ao Servidor via SSH com hosts.deny + Logs + UFW
 ├── certbot-cloudflare-dns-01.md                                   # Configuração do Certbot com Desafio DNS-01 e Cloudflare
-├── autenticacao-por-chave-com-termius-e-servidor-linux.md         # Configuração do Certbot com Desafio DNS-01 e Cloudflare
+├── autenticacao-por-chave-com-termius-e-servidor-linux.md         # Manual de Configuração SSH: Autenticação por Chave com Termius e Servidor Linux
