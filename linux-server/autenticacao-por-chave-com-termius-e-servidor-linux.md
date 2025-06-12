@@ -290,7 +290,7 @@ A autenticação por chave SSH é um pilar da segurança em servidores Linux. Do
 
 *   [Documentação Oficial do GitHub Markdown](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
 *   [Documentação Oficial do SSH](https://www.ssh.com/ssh/protocol/)
-*   [Termius - Documentação Oficial](https://termius.com/docs/)
+*   [Termius - Documentação Oficial](https://termius.com/documentation)
 
 ---
 
