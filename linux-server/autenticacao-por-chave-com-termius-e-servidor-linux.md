@@ -216,7 +216,7 @@ Com a chave privada importada, vamos configurar o Termius para usá-la ao conect
 
 ## Passo 6: Testar a Conexão
 
-Agora é a hora da verdade! ✨
+Agora é a hora da verdade!
 
 1.  No Termius, clique no host que você acabou de configurar para tentar a conexão.
 2.  **Se tudo estiver correto e as chaves funcionarem:** Você deverá ser conectado ao servidor sem ser solicitado a digitar a senha (se sua chave tiver uma passphrase, o Termius pedirá a passphrase da chave, e não a senha do servidor).
