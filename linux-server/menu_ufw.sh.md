@@ -6,13 +6,8 @@
 #
 # DESCRIÇÃO:
 # Este script fornece uma interface de menu para gerenciar o UFW, permitindo
-# adicionar regras para IPs específicos, ativar, desativar e verificar o status
+# adicionar/deletar regras, ativar, desativar e verificar o status
 # do firewall de forma segura e intuitiva.
-#
-# COMO USAR:
-# 1. Salve este arquivo (ex: menu_ufw.sh).
-# 2. Dê permissão de execução: chmod +x menu_ufw.sh
-# 3. Execute com privilégios de administrador: sudo ./menu_ufw.sh
 #
 # =================================================================================
 
@@ -36,7 +31,7 @@ mostrar_cabecalho() {
 checar_status_ufw() {
     if ! sudo ufw status | grep -q "active"; then
         echo -e "${VERMELHO}AVISO: O UFW está inativo.${SEM_COR}"
-        echo -e "A regra será adicionada, mas não terá efeito até que o firewall seja ativado (Opção 5)."
+        echo -e "A regra será adicionada, mas não terá efeito até que o firewall seja ativado."
         read -n 1 -s -r -p "Pressione qualquer tecla para continuar..."
         echo
     fi
@@ -73,6 +68,41 @@ liberar_outro_servico() {
     echo -e "${VERDE}Regra para o serviço adicionada com sucesso!${SEM_COR}"
 }
 
+# --- FUNÇÃO PARA DELETAR UMA REGRA ---
+deletar_regra() {
+    mostrar_cabecalho
+    echo -e "${AMARELO}--- Deletar Regra do Firewall ---${SEM_COR}"
+    
+    sudo ufw status numbered
+    echo
+    
+    read -p "Digite o número da regra que você deseja deletar (ou '0' para cancelar): " rule_number
+
+    if ! [[ "$rule_number" =~ ^[0-9]+$ ]]; then
+        echo -e "\n${VERMELHO}Entrada inválida. Por favor, digite um número.${SEM_COR}"
+        return
+    fi
+    
+    if [[ "$rule_number" -eq 0 ]]; then
+        echo -e "\n${AMARELO}Operação cancelada.${SEM_COR}"
+        return
+    fi
+    
+    read -p "Você tem certeza que deseja deletar a regra número ${VERMELHO}$rule_number${SEM_COR}? [s/N]: " confirm
+    
+    # Bloco reescrito com 'case' para máxima compatibilidade e para evitar o erro.
+    case "$confirm" in
+        s|S)
+            echo -e "\nDeletando regra ${VERMELHO}$rule_number${SEM_COR}..."
+            sudo ufw --force delete "$rule_number"
+            echo -e "${VERDE}Regra deletada com sucesso!${SEM_COR}"
+            ;;
+        *)
+            echo -e "\n${AMARELO}Deleção cancelada pelo usuário.${SEM_COR}"
+            ;;
+    esac
+}
+
 # --- FUNÇÃO PARA MOSTRAR STATUS ---
 mostrar_status() {
     mostrar_cabecalho
@@ -86,8 +116,6 @@ mostrar_status() {
 ativar_ufw() {
     mostrar_cabecalho
     echo -e "${AMARELO}--- Ativando o Firewall UFW ---${SEM_COR}"
-    # O comando 'enable' pode interromper conexões SSH existentes e pede confirmação.
-    # A flag '--force' evita a pergunta, mas é mais seguro deixar o usuário confirmar.
     sudo ufw enable
     echo -e "${VERDE}Comando para ativar o UFW executado.${SEM_COR}"
 }
@@ -102,29 +130,29 @@ desativar_ufw() {
 
 # --- SCRIPT PRINCIPAL ---
 
-# Verifica se o script está sendo executado como root
 if [[ $EUID -ne 0 ]]; then
    echo -e "${VERMELHO}ERRO: Este script precisa ser executado com privilégios de root (use 'sudo').${SEM_COR}"
    exit 1
 fi
 
-# Loop principal do menu
 while true; do
     mostrar_cabecalho
     echo "Escolha uma opção:"
-    echo -e "  ${CIANO}--- Adicionar Regras ---${SEM_COR}"
+    echo -e "  ${CIANO}--- Gerenciamento de Regras ---${SEM_COR}"
     echo -e "  ${AMARELO}1)${SEM_COR} Liberar acesso SSH para um IP"
     echo -e "  ${AMARELO}2)${SEM_COR} Liberar acesso a outro Serviço/Porta para um IP"
+    echo -e "  ${AMARELO}3)${SEM_COR} ${VERMELHO}Deletar uma regra por número${SEM_COR}"
     echo
-    echo -e "  ${CIANO}--- Gerenciamento do Firewall ---${SEM_COR}"
-    echo -e "  ${AMARELO}3)${SEM_COR} Ver status atual do UFW"
-    echo -e "  ${AMARELO}4)${SEM_COR} ${VERDE}Ativar${SEM_COR} Firewall UFW"
-    echo -e "  ${AMARELO}5)${SEM_COR} ${VERMELHO}Desativar${SEM_COR} Firewall UFW"
+    echo -e "  ${CIANO}--- Controle do Firewall ---${SEM_COR}"
+    echo -e "  ${AMARELO}4)${SEM_COR} Ver status atual do UFW"
+    echo -e "  ${AMARELO}5)${SEM_COR} ${VERDE}Ativar${SEM_COR} Firewall UFW"
+    echo -e "  ${AMARELO}6)${SEM_COR} ${VERMELHO}Desativar${SEM_COR} Firewall UFW"
     echo
-    echo -e "  ${AMARELO}6)${SEM_COR} Sair"
+    echo -e "  ${AMARELO}7)${SEM_COR} Sair"
     echo
     read -p "Opção: " choice
 
+    # Bloco 'case' principal também reescrito para o formato mais padrão.
     case $choice in
         1)
             liberar_ssh
@@ -135,17 +163,21 @@ while true; do
             sleep 2
             ;;
         3)
-            mostrar_status
+            deletar_regra
+            sleep 3
             ;;
         4)
+            mostrar_status
+            ;;
+        5)
             ativar_ufw
             sleep 3
             ;;
-        5)
+        6)
             desativar_ufw
             sleep 3
             ;;
-        6)
+        7)
             echo -e "\n${CIANO}Saindo...${SEM_COR}"
             exit 0
             ;;
