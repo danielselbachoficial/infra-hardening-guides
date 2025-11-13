@@ -1,13 +1,12 @@
 #!/bin/bash
 
 # =================================================================================
-# Script com Menu Interativo para Gerenciar Regras do Firewall UFW
+# Script com Menu Interativo e Cabeçalho Dinâmico para Gerenciar o Firewall UFW
 # =================================================================================
 #
 # DESCRIÇÃO:
-# Este script fornece uma interface de menu para gerenciar o UFW, permitindo
-# adicionar/deletar regras, ativar, desativar e verificar o status
-# do firewall de forma segura e intuitiva.
+# Este script fornece uma interface de menu para gerenciar o UFW. O cabeçalho
+# exibe dinamicamente o status do firewall e o número de regras ativas.
 #
 # =================================================================================
 
@@ -18,33 +17,31 @@ CIANO='\033[0;36m'
 VERMELHO='\033[0;31m'
 SEM_COR='\033[0m'
 
-# --- FUNÇÃO PARA EXIBIR O CABEÇALHO ---
+# --- FUNÇÃO PARA EXIBIR O CABEÇALHO DINÂMICO ---
 mostrar_cabecalho() {
+    local RULE_COUNT=$(sudo ufw status numbered | grep -c "^\[")
+
+    local STATUS_DISPLAY=""
+    if [ "$UFW_STATUS" = "active" ]; then
+        STATUS_DISPLAY="${VERDE}Ativo${SEM_COR}"
+    else
+        STATUS_DISPLAY="${VERMELHO}Inativo${SEM_COR}"
+    fi
+
     clear
     echo -e "${CIANO}=====================================================${SEM_COR}"
     echo -e "${CIANO}   Gerenciador de Regras do Firewall UFW          ${SEM_COR}"
     echo -e "${CIANO}=====================================================${SEM_COR}"
+    echo -e "  ${AMARELO}Status Atual:${SEM_COR} $STATUS_DISPLAY  |  ${AMARELO}Regras Ativas:${SEM_COR} $RULE_COUNT"
     echo
-}
-
-# --- FUNÇÃO PARA VERIFICAR SE O UFW ESTÁ ATIVO ANTES DE ADICIONAR REGRAS ---
-checar_status_ufw() {
-    if ! sudo ufw status | grep -q "active"; then
-        echo -e "${VERMELHO}AVISO: O UFW está inativo.${SEM_COR}"
-        echo -e "A regra será adicionada, mas não terá efeito até que o firewall seja ativado."
-        read -n 1 -s -r -p "Pressione qualquer tecla para continuar..."
-        echo
-    fi
 }
 
 # --- FUNÇÃO PARA LIBERAR ACESSO SSH ---
 liberar_ssh() {
     mostrar_cabecalho
-    checar_status_ufw
     echo -e "${AMARELO}--- Liberação de Acesso SSH ---${SEM_COR}"
     read -p "Digite o endereço IP que terá acesso: " ip_address
     read -p "Digite a porta do SSH (ou pressione Enter para usar a padrão '22'): " ssh_port
-
     ssh_port=${ssh_port:-22}
 
     echo -e "\nLiberando acesso para o IP ${VERDE}$ip_address${SEM_COR} na porta ${VERDE}$ssh_port/tcp${SEM_COR}..."
@@ -55,12 +52,10 @@ liberar_ssh() {
 # --- FUNÇÃO PARA LIBERAR OUTROS SERVIÇOS ---
 liberar_outro_servico() {
     mostrar_cabecalho
-    checar_status_ufw
     echo -e "${AMARELO}--- Liberação de Outro Serviço/Porta ---${SEM_COR}"
     read -p "Digite o endereço IP que terá acesso: " ip_address
     read -p "Digite a porta do serviço (ex: 80, 443, 3306): " service_port
     read -p "Digite o protocolo (tcp ou udp, Enter para 'tcp'): " protocol
-
     protocol=${protocol:-tcp}
 
     echo -e "\nLiberando acesso para o IP ${VERDE}$ip_address${SEM_COR} na porta ${VERDE}$service_port/$protocol${SEM_COR}..."
@@ -88,9 +83,11 @@ deletar_regra() {
         return
     fi
     
-    read -p "Você tem certeza que deseja deletar a regra número ${VERMELHO}$rule_number${SEM_COR}? [s/N]: " confirm
+    # CORREÇÃO APLICADA AQUI:
+    # Usamos 'printf' para exibir o prompt colorido e depois 'read' para capturar a entrada.
+    printf "Você tem certeza que deseja deletar a regra número ${VERMELHO}%s${SEM_COR}? [s/N]: " "$rule_number"
+    read confirm
     
-    # Bloco reescrito com 'case' para máxima compatibilidade e para evitar o erro.
     case "$confirm" in
         s|S)
             echo -e "\nDeletando regra ${VERMELHO}$rule_number${SEM_COR}..."
@@ -101,15 +98,6 @@ deletar_regra() {
             echo -e "\n${AMARELO}Deleção cancelada pelo usuário.${SEM_COR}"
             ;;
     esac
-}
-
-# --- FUNÇÃO PARA MOSTRAR STATUS ---
-mostrar_status() {
-    mostrar_cabecalho
-    echo -e "${AMARELO}--- Status Atual do UFW ---${SEM_COR}"
-    sudo ufw status numbered
-    echo
-    read -n 1 -s -r -p "Pressione qualquer tecla para voltar ao menu..."
 }
 
 # --- FUNÇÃO PARA ATIVAR O UFW ---
@@ -144,46 +132,27 @@ while true; do
     echo -e "  ${AMARELO}3)${SEM_COR} ${VERMELHO}Deletar uma regra por número${SEM_COR}"
     echo
     echo -e "  ${CIANO}--- Controle do Firewall ---${SEM_COR}"
-    echo -e "  ${AMARELO}4)${SEM_COR} Ver status atual do UFW"
-    echo -e "  ${AMARELO}5)${SEM_COR} ${VERDE}Ativar${SEM_COR} Firewall UFW"
-    echo -e "  ${AMARELO}6)${SEM_COR} ${VERMELHO}Desativar${SEM_COR} Firewall UFW"
+    echo -e "  ${AMARELO}4)${SEM_COR} ${VERDE}Ativar${SEM_COR} Firewall UFW"
+    echo -e "  ${AMARELO}5)${SEM_COR} ${VERMELHO}Desativar${SEM_COR} Firewall UFW"
     echo
-    echo -e "  ${AMARELO}7)${SEM_COR} Sair"
+    echo -e "  ${AMARELO}6)${SEM_COR} Sair"
     echo
     read -p "Opção: " choice
 
-    # Bloco 'case' principal também reescrito para o formato mais padrão.
     case $choice in
         1)
-            liberar_ssh
-            sleep 2
-            ;;
+            liberar_ssh; sleep 2 ;;
         2)
-            liberar_outro_servico
-            sleep 2
-            ;;
+            liberar_outro_servico; sleep 2 ;;
         3)
-            deletar_regra
-            sleep 3
-            ;;
+            deletar_regra; sleep 3 ;;
         4)
-            mostrar_status
-            ;;
+            ativar_ufw; sleep 3 ;;
         5)
-            ativar_ufw
-            sleep 3
-            ;;
+            desativar_ufw; sleep 3 ;;
         6)
-            desativar_ufw
-            sleep 3
-            ;;
-        7)
-            echo -e "\n${CIANO}Saindo...${SEM_COR}"
-            exit 0
-            ;;
+            echo -e "\n${CIANO}Saindo...${SEM_COR}"; exit 0 ;;
         *)
-            echo -e "\n${VERMELHO}Opção inválida! Por favor, tente novamente.${SEM_COR}"
-            sleep 2
-            ;;
+            echo -e "\n${VERMELHO}Opção inválida! Por favor, tente novamente.${SEM_COR}"; sleep 2 ;;
     esac
 done
