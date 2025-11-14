@@ -41,6 +41,7 @@ O `nftables` é extremamente poderoso, mas sua sintaxe pode ser complexa. Este s
 
 ### Aparência do Menu
 
+```
 #!/bin/bash
 
 # =================================================================================
@@ -253,3 +254,4 @@ while true; do
         *) echo -e "\n${VERMELHO}Opção inválida! Por favor, tente novamente.${SEM_COR}"; sleep 2 ;;
     esac
 done
+```
