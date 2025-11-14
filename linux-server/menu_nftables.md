@@ -1,3 +1,46 @@
+# Script de Gerenciamento Interativo para nftables
+
+Este repositório contém um script de shell (`menu_nftables.sh`) projetado para simplificar e tornar mais seguro o gerenciamento do **nftables**, o framework de firewall moderno do kernel Linux, padrão em distribuições como Debian 11+, RHEL 8+, e outras.
+
+O `nftables` é extremamente poderoso, mas sua sintaxe pode ser complexa. Este script abstrai essa complexidade em uma interface de menu amigável.
+
+## Recursos Principais
+
+-   🚀 **Interface de Menu Intuitiva**: Adicione e remova regras de firewall sem precisar decorar a sintaxe complexa do `nftables`.
+-   📊 **Cabeçalho Dinâmico**: Veja o status do serviço (`Ativo`/`Inativo`) e a quantidade de regras em tempo real.
+-   💾 **Persistência de Regras**: Inclui uma opção crucial para **salvar as regras ativas**, garantindo que suas configurações não sejam perdidas após uma reinicialização.
+-   🤖 **Inicialização Inteligente**: Se o `nftables` não estiver configurado, o script cria automaticamente a estrutura base (tabelas e chains) e pergunta se você deseja adicionar uma regra padrão para SSH, evitando que você se tranque para fora do servidor.
+-   🛡️ **Segurança**: Pede confirmação para ações destrutivas, como deletar regras ou salvar configurações.
+-   🎨 **Saída Colorida**: Facilita a identificação de informações importantes, erros e sucessos.
+
+## Pré-requisitos
+
+-   Um shell `bash`.
+-   Privilégios de `sudo`.
+-   O pacote `nftables` instalado. Se não tiver, instale com:
+    ```bash
+    sudo apt update && sudo apt install nftables
+    ```
+
+## Como Usar
+
+1.  **Crie o arquivo do script** chamado `menu_nftables.sh` e cole o script que está em `Aparência do Menu`.
+    ```bash
+    sudo nano menu_nftables.sh
+    ```
+
+2.  **Dê permissão de execução** ao arquivo:
+    ```bash
+    chmod +x menu_nftables.sh
+    ```
+
+3.  **Execute o script** com `sudo`:
+    ```bash
+    sudo ./menu_nftables.sh
+    ```
+
+### Aparência do Menu
+
 #!/bin/bash
 
 # =================================================================================
