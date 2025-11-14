@@ -23,11 +23,14 @@ O script oferece uma interface de menu amigável e segura, ideal tanto para inic
 
 ## Como Usar
 
-1.  **Salve o script** em um arquivo chamado `menu_ufw.sh`.
+1.  **Crie o arquivo do script** chamado `menu_ufw.sh` e cole o script que está em `Aparência do Menu`.
+```bash
+sudo nano menu_ufw.sh
+ ```
 
 2.  **Dê permissão de execução** ao arquivo:
     ```bash
-    chmod +x menu_ufw.sh
+    sudo chmod +x menu_ufw.sh
     ```
 
 3.  **Execute o script** com `sudo`:
