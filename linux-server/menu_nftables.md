@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =================================================================================
-# Script com Menu Interativo para Gerenciar o Firewall nftables (Versão Corrigida)
+# Script com Menu Interativo para Gerenciar o Firewall nftables
 # =================================================================================
 #
 # DESCRIÇÃO:
