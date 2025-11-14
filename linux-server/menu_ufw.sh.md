@@ -1,3 +1,42 @@
+# Script de Gerenciamento Interativo para UFW
+
+Este repositório contém um script de shell (`menu_ufw.sh`) projetado para simplificar e agilizar o gerenciamento do **UFW (Uncomplicated Firewall)** em servidores baseados em Debian/Ubuntu.
+
+O script oferece uma interface de menu amigável e segura, ideal tanto para iniciantes que precisam de uma forma mais segura de interagir com o firewall, quanto para administradores de sistemas que buscam acelerar tarefas do dia a dia.
+
+## Recursos Principais
+
+-   ✅ **Interface de Menu Intuitiva**: Navegue por opções claras para adicionar/deletar regras e controlar o firewall.
+-   🚀 **Cabeçalho Dinâmico**: O status do firewall (**Ativo**/**Inativo**) e a **contagem de regras** são exibidos em tempo real no topo da tela.
+-   🛡️ **Segurança em Primeiro Lugar**: Pede confirmação para ações destrutivas (como deletar regras) para evitar erros.
+-   ⚙️ **Gerenciamento Completo**: Permite não apenas gerenciar regras, mas também ativar e desativar o serviço do UFW.
+-   🎨 **Saída Colorida**: Utiliza cores para diferenciar avisos, sucessos e erros, melhorando a legibilidade.
+
+## Pré-requisitos
+
+-   Um shell `bash` (padrão na maioria dos sistemas Linux).
+-   Privilégios de `sudo`.
+-   O pacote `ufw` instalado no sistema. Se não tiver, instale com:
+    ```bash
+    sudo apt update && sudo apt install ufw
+    ```
+
+## Como Usar
+
+1.  **Salve o script** em um arquivo chamado `menu_ufw.sh`.
+
+2.  **Dê permissão de execução** ao arquivo:
+    ```bash
+    chmod +x menu_ufw.sh
+    ```
+
+3.  **Execute o script** com `sudo`:
+    ```bash
+    sudo ./menu_ufw.sh
+    ```
+
+### Aparência do Menu
+```
 #!/bin/bash
 
 # =================================================================================
@@ -156,3 +195,4 @@ while true; do
             echo -e "\n${VERMELHO}Opção inválida! Por favor, tente novamente.${SEM_COR}"; sleep 2 ;;
     esac
 done
+```
