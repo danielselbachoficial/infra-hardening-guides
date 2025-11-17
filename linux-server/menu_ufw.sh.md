@@ -47,155 +47,310 @@ O script oferece uma interface de menu amigável e segura, ideal tanto para inic
 # =================================================================================
 #
 # DESCRIÇÃO:
-# Este script fornece uma interface de menu para gerenciar o UFW. O cabeçalho
-# exibe dinamicamente o status do firewall e o número de regras ativas.
+# Este script fornece uma interface de menu para gerenciar o UFW. 
 #
 # =================================================================================
 
-# --- CORES PARA MELHORAR A VISUALIZAÇÃO ---
 VERDE='\033[0;32m'
 AMARELO='\033[1;33m'
 CIANO='\033[0;36m'
 VERMELHO='\033[0;31m'
 SEM_COR='\033[0m'
 
-# --- FUNÇÃO PARA EXIBIR O CABEÇALHO DINÂMICO ---
-mostrar_cabecalho() {
-    local RULE_COUNT=$(sudo ufw status numbered | grep -c "^\[")
-
-    local STATUS_DISPLAY=""
-    if [ "$UFW_STATUS" = "active" ]; then
-        STATUS_DISPLAY="${VERDE}Ativo${SEM_COR}"
-    else
-        STATUS_DISPLAY="${VERMELHO}Inativo${SEM_COR}"
-    fi
-
+cabecalho() {
     clear
+    local status="Inativo"
+    local cor_status="${VERMELHO}"
+    if command -v ufw >/dev/null 2>&1; then
+        if sudo ufw status | grep -q "Status: active"; then
+            status="Ativo"
+            cor_status="${VERDE}"
+        fi
+    fi
     echo -e "${CIANO}=====================================================${SEM_COR}"
     echo -e "${CIANO}   Gerenciador de Regras do Firewall UFW          ${SEM_COR}"
     echo -e "${CIANO}=====================================================${SEM_COR}"
-    echo -e "  ${AMARELO}Status Atual:${SEM_COR} $STATUS_DISPLAY  |  ${AMARELO}Regras Ativas:${SEM_COR} $RULE_COUNT"
+    echo -e "  Status: ${cor_status}${status}${SEM_COR}"
     echo
 }
 
-# --- FUNÇÃO PARA LIBERAR ACESSO SSH ---
-liberar_ssh() {
-    mostrar_cabecalho
-    echo -e "${AMARELO}--- Liberação de Acesso SSH ---${SEM_COR}"
-    read -p "Digite o endereço IP que terá acesso: " ip_address
-    read -p "Digite a porta do SSH (ou pressione Enter para usar a padrão '22'): " ssh_port
-    ssh_port=${ssh_port:-22}
-
-    echo -e "\nLiberando acesso para o IP ${VERDE}$ip_address${SEM_COR} na porta ${VERDE}$ssh_port/tcp${SEM_COR}..."
-    sudo ufw allow from "$ip_address" to any port "$ssh_port" proto tcp
-    echo -e "${VERDE}Regra para SSH adicionada com sucesso!${SEM_COR}"
+validar_ip_ou_subnet() {
+    local entrada="$1"
+    if [[ "$entrada" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        return 0
+    fi
+    if [[ "$entrada" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}$ ]]; then
+        return 0
+    fi
+    return 1
 }
 
-# --- FUNÇÃO PARA LIBERAR OUTROS SERVIÇOS ---
-liberar_outro_servico() {
-    mostrar_cabecalho
-    echo -e "${AMARELO}--- Liberação de Outro Serviço/Porta ---${SEM_COR}"
-    read -p "Digite o endereço IP que terá acesso: " ip_address
-    read -p "Digite a porta do serviço (ex: 80, 443, 3306): " service_port
-    read -p "Digite o protocolo (tcp ou udp, Enter para 'tcp'): " protocol
-    protocol=${protocol:-tcp}
-
-    echo -e "\nLiberando acesso para o IP ${VERDE}$ip_address${SEM_COR} na porta ${VERDE}$service_port/$protocol${SEM_COR}..."
-    sudo ufw allow from "$ip_address" to any port "$service_port" proto "$protocol"
-    echo -e "${VERDE}Regra para o serviço adicionada com sucesso!${SEM_COR}"
+validar_porta() {
+    local porta="$1"
+    if [[ "$porta" =~ ^[0-9]+$ ]] && [ "$porta" -ge 1 ] && [ "$porta" -le 65535 ]; then
+        return 0
+    fi
+    return 1
 }
 
-# --- FUNÇÃO PARA DELETAR UMA REGRA ---
-deletar_regra() {
-    mostrar_cabecalho
-    echo -e "${AMARELO}--- Deletar Regra do Firewall ---${SEM_COR}"
-    
+opcao_1() {
+    clear
+    echo -e "${AMARELO}--- Liberar acesso SSH ---${SEM_COR}"
+    echo
+    echo -n "IP ou Sub-rede (ex: 192.168.1.100 ou 192.168.1.0/24): "
+    read -r ip_subnet
+    if ! validar_ip_ou_subnet "$ip_subnet"; then
+        echo -e "${VERMELHO}IP ou sub-rede inválido${SEM_COR}"
+        return 1
+    fi
+    echo -n "Porta (padrão 22): "
+    read -r porta
+    porta=${porta:-22}
+    if ! validar_porta "$porta"; then
+        echo -e "${VERMELHO}Porta inválida${SEM_COR}"
+        return 1
+    fi
+    sudo ufw allow from "$ip_subnet" to any port "$porta" proto tcp
+    echo -e "${VERDE}Regra adicionada para $ip_subnet!${SEM_COR}"
+}
+
+opcao_2() {
+    clear
+    echo -e "${AMARELO}--- Liberar acesso a Serviço ---${SEM_COR}"
+    echo
+    echo -n "IP ou Sub-rede (ex: 192.168.1.100 ou 192.168.1.0/24): "
+    read -r ip_subnet
+    if ! validar_ip_ou_subnet "$ip_subnet"; then
+        echo -e "${VERMELHO}IP ou sub-rede inválido${SEM_COR}"
+        return 1
+    fi
+    echo -n "Porta: "
+    read -r porta
+    if ! validar_porta "$porta"; then
+        echo -e "${VERMELHO}Porta inválida${SEM_COR}"
+        return 1
+    fi
+    echo -n "Protocolo (tcp/udp): "
+    read -r proto
+    proto=${proto:-tcp}
+    sudo ufw allow from "$ip_subnet" to any port "$porta" proto "$proto"
+    echo -e "${VERDE}Regra adicionada para $ip_subnet!${SEM_COR}"
+}
+
+opcao_3() {
+    clear
+    echo -e "${AMARELO}--- Deletar regra ---${SEM_COR}"
+    echo
     sudo ufw status numbered
     echo
-    
-    read -p "Digite o número da regra que você deseja deletar (ou '0' para cancelar): " rule_number
-
-    if ! [[ "$rule_number" =~ ^[0-9]+$ ]]; then
-        echo -e "\n${VERMELHO}Entrada inválida. Por favor, digite um número.${SEM_COR}"
-        return
+    echo -n "Número (0=cancelar): "
+    read -r num
+    if [ "$num" -eq 0 ] 2>/dev/null; then
+        return 0
     fi
-    
-    if [[ "$rule_number" -eq 0 ]]; then
-        echo -e "\n${AMARELO}Operação cancelada.${SEM_COR}"
-        return
+    echo -n "Confirma? [s/N]: "
+    read -r conf
+    if [ "$conf" = "s" ]; then
+        sudo ufw --force delete "$num"
+        echo -e "${VERDE}Deletado!${SEM_COR}"
     fi
-    
-    # CORREÇÃO APLICADA AQUI:
-    # Usamos 'printf' para exibir o prompt colorido e depois 'read' para capturar a entrada.
-    printf "Você tem certeza que deseja deletar a regra número ${VERMELHO}%s${SEM_COR}? [s/N]: " "$rule_number"
-    read confirm
-    
-    case "$confirm" in
-        s|S)
-            echo -e "\nDeletando regra ${VERMELHO}$rule_number${SEM_COR}..."
-            sudo ufw --force delete "$rule_number"
-            echo -e "${VERDE}Regra deletada com sucesso!${SEM_COR}"
-            ;;
-        *)
-            echo -e "\n${AMARELO}Deleção cancelada pelo usuário.${SEM_COR}"
-            ;;
-    esac
 }
 
-# --- FUNÇÃO PARA ATIVAR O UFW ---
-ativar_ufw() {
-    mostrar_cabecalho
-    echo -e "${AMARELO}--- Ativando o Firewall UFW ---${SEM_COR}"
-    sudo ufw enable
-    echo -e "${VERDE}Comando para ativar o UFW executado.${SEM_COR}"
+opcao_4() {
+    while true; do
+        clear
+        echo -e "${AMARELO}--- Verificar Instalação do UFW ---${SEM_COR}"
+        echo
+
+        if command -v ufw >/dev/null 2>&1; then
+            echo -e "${VERDE}✓ UFW está instalado${SEM_COR}"
+            echo
+            echo -e "${CIANO}Informações do UFW:${SEM_COR}"
+            echo
+            sudo ufw status verbose
+            echo
+            echo -e "${CIANO}Versão:${SEM_COR}"
+            echo
+            echo -e "${CIANO}Localização:${SEM_COR}"
+            command -v ufw
+            echo
+        else
+            echo -e "${VERMELHO}✗ UFW não está instalado${SEM_COR}"
+            echo
+            echo -e "${AMARELO}Opções de instalação:${SEM_COR}"
+            echo
+
+            if command -v apt-get >/dev/null 2>&1; then
+                echo -e "  Sistema: ${CIANO}Debian/Ubuntu${SEM_COR}"
+                echo -e "  Comando: ${VERDE}sudo apt-get install ufw${SEM_COR}"
+                echo
+            elif command -v yum >/dev/null 2>&1; then
+                echo -e "  Sistema: ${CIANO}RedHat/CentOS${SEM_COR}"
+                echo -e "  Comando: ${VERDE}sudo yum install ufw${SEM_COR}"
+                echo
+            elif command -v dnf >/dev/null 2>&1; then
+                echo -e "  Sistema: ${CIANO}Fedora${SEM_COR}"
+                echo -e "  Comando: ${VERDE}sudo dnf install ufw${SEM_COR}"
+                echo
+            else
+                echo -e "${AMARELO}Instale UFW através do gerenciador de pacotes da sua distribuição${SEM_COR}"
+                echo
+            fi
+        fi
+
+        echo -e "${AMARELO}======== Menu de Verificação ========${SEM_COR}"
+        echo -e "  ${VERDE}I${SEM_COR}) Instalar UFW"
+        echo -e "  ${VERDE}R${SEM_COR}) Recarregar/Atualizar"
+        echo -e "  ${VERDE}V${SEM_COR}) Voltar ao menu principal"
+        echo -e "${AMARELO}=====================================${SEM_COR}"
+        echo
+        echo -n "Opção: "
+        read -r opcao_inst
+
+        case "$opcao_inst" in
+            i|I)
+                echo
+                echo -e "${CIANO}[*] Tentando instalar UFW...${SEM_COR}"
+                echo
+
+                if command -v apt-get >/dev/null 2>&1; then
+                    echo -e "${CIANO}[*] Atualizando cache de pacotes...${SEM_COR}"
+                    sudo apt-get update
+                    echo
+                    echo -e "${CIANO}[*] Instalando UFW...${SEM_COR}"
+                    sudo apt-get install -y ufw
+                    echo
+                    echo -e "${VERDE}✓ UFW instalado com sucesso!${SEM_COR}"
+                    sleep 2
+                elif command -v yum >/dev/null 2>&1; then
+                    echo -e "${CIANO}[*] Instalando UFW...${SEM_COR}"
+                    sudo yum install -y ufw
+                    echo
+                    echo -e "${VERDE}✓ UFW instalado com sucesso!${SEM_COR}"
+                    sleep 2
+                elif command -v dnf >/dev/null 2>&1; then
+                    echo -e "${CIANO}[*] Instalando UFW...${SEM_COR}"
+                    sudo dnf install -y ufw
+                    echo
+                    echo -e "${VERDE}✓ UFW instalado com sucesso!${SEM_COR}"
+                    sleep 2
+                else
+                    echo -e "${VERMELHO}✗ Gerenciador de pacotes não suportado${SEM_COR}"
+                    sleep 2
+                fi
+                ;;
+            r|R)
+                continue
+                ;;
+            v|V)
+                return 0
+                ;;
+            *)
+                echo -e "${VERMELHO}Opção inválida${SEM_COR}"
+                sleep 1
+                ;;
+        esac
+    done
 }
 
-# --- FUNÇÃO PARA DESATIVAR O UFW ---
-desativar_ufw() {
-    mostrar_cabecalho
-    echo -e "${AMARELO}--- Desativando o Firewall UFW ---${SEM_COR}"
-    sudo ufw disable
-    echo -e "${VERDE}Firewall UFW desativado com sucesso.${SEM_COR}"
+opcao_5() {
+    clear
+    echo -e "${AMARELO}--- Ativar UFW ---${SEM_COR}"
+    echo
+    sudo ufw --force enable
+    echo -e "${VERDE}Ativado!${SEM_COR}"
 }
 
-# --- SCRIPT PRINCIPAL ---
-
-if [[ $EUID -ne 0 ]]; then
-   echo -e "${VERMELHO}ERRO: Este script precisa ser executado com privilégios de root (use 'sudo').${SEM_COR}"
-   exit 1
-fi
-
-while true; do
-    mostrar_cabecalho
-    echo "Escolha uma opção:"
-    echo -e "  ${CIANO}--- Gerenciamento de Regras ---${SEM_COR}"
-    echo -e "  ${AMARELO}1)${SEM_COR} Liberar acesso SSH para um IP"
-    echo -e "  ${AMARELO}2)${SEM_COR} Liberar acesso a outro Serviço/Porta para um IP"
-    echo -e "  ${AMARELO}3)${SEM_COR} ${VERMELHO}Deletar uma regra por número${SEM_COR}"
+opcao_6() {
+    clear
+    echo -e "${AMARELO}--- Desativar UFW ---${SEM_COR}"
     echo
-    echo -e "  ${CIANO}--- Controle do Firewall ---${SEM_COR}"
-    echo -e "  ${AMARELO}4)${SEM_COR} ${VERDE}Ativar${SEM_COR} Firewall UFW"
-    echo -e "  ${AMARELO}5)${SEM_COR} ${VERMELHO}Desativar${SEM_COR} Firewall UFW"
-    echo
-    echo -e "  ${AMARELO}6)${SEM_COR} Sair"
-    echo
-    read -p "Opção: " choice
+    echo -e "${VERMELHO}ATENÇÃO: Isso expõe seu sistema!${SEM_COR}"
+    echo -n "Confirma? [s/N]: "
+    read -r resp
+    if [ "$resp" = "s" ]; then
+        sudo ufw disable
+        echo -e "${VERDE}Desativado${SEM_COR}"
+    fi
+}
 
-    case $choice in
-        1)
-            liberar_ssh; sleep 2 ;;
-        2)
-            liberar_outro_servico; sleep 2 ;;
-        3)
-            deletar_regra; sleep 3 ;;
-        4)
-            ativar_ufw; sleep 3 ;;
-        5)
-            desativar_ufw; sleep 3 ;;
-        6)
-            echo -e "\n${CIANO}Saindo...${SEM_COR}"; exit 0 ;;
-        *)
-            echo -e "\n${VERMELHO}Opção inválida! Por favor, tente novamente.${SEM_COR}"; sleep 2 ;;
-    esac
-done
+opcao_7() {
+    while true; do
+        clear
+        echo -e "${AMARELO}--- Regras UFW Ativas ---${SEM_COR}"
+        echo
+
+        if ! command -v ufw >/dev/null 2>&1; then
+            echo -e "${VERMELHO}UFW não está instalado${SEM_COR}"
+            echo
+            echo -n "Pressione ENTER para voltar ao menu principal..."
+            read -r
+            return 1
+        fi
+
+        echo -e "${CIANO}[Regras numeradas - para deletar]:${SEM_COR}"
+        echo
+        sudo ufw status numbered
+        echo
+        echo -e "${CIANO}[Regras em formato padrão]:${SEM_COR}"
+        echo
+        sudo ufw status
+        echo
+        echo -e "${CIANO}[Status verboso]:${SEM_COR}"
+        echo
+        sudo ufw status verbose
+        echo
+        echo -e "${AMARELO}======== Menu de Visualização ========${SEM_COR}"
+        echo -e "  ${VERDE}R${SEM_COR}) Recarregar/Atualizar"
+        echo -e "  ${VERDE}V${SEM_COR}) Voltar ao menu principal"
+        echo -e "${AMARELO}=====================================${SEM_COR}"
+        echo
+        echo -n "Opção: "
+        read -r opcao_viz
+
+        case "$opcao_viz" in
+            r|R)
+                continue
+                ;;
+            v|V)
+                return 0
+                ;;
+            *)
+                echo -e "${VERMELHO}Opção inválida${SEM_COR}"
+                sleep 1
+                ;;
+        esac
+    done
+}
+
+main() {
+    while true; do
+        cabecalho
+        echo "Menu:"
+        echo -e "  ${AMARELO}1)${SEM_COR} Liberar SSH"
+        echo -e "  ${AMARELO}2)${SEM_COR} Liberar Serviço"
+        echo -e "  ${AMARELO}3)${SEM_COR} Deletar regra"
+        echo -e "  ${AMARELO}4)${SEM_COR} Verificar instalação"
+        echo -e "  ${AMARELO}5)${SEM_COR} Ativar UFW"
+        echo -e "  ${AMARELO}6)${SEM_COR} Desativar UFW"
+        echo -e "  ${AMARELO}7)${SEM_COR} Visualizar regras"
+        echo -e "  ${AMARELO}8)${SEM_COR} Sair"
+        echo
+        echo -n "Opção [1-8]: "
+        read -r opcao
+        case "$opcao" in
+            1) opcao_1; sleep 2 ;;
+            2) opcao_2; sleep 2 ;;
+            3) opcao_3; sleep 2 ;;
+            4) opcao_4 ;;
+            5) opcao_5; sleep 2 ;;
+            6) opcao_6; sleep 2 ;;
+            7) opcao_7 ;;
+            8) echo -e "${VERDE}Saindo...${SEM_COR}"; exit 0 ;;
+            *) echo -e "${VERMELHO}Inválido${SEM_COR}"; sleep 1 ;;
+        esac
+    done
+}
+
+main "$@"
 ```
