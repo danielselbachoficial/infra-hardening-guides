@@ -41,16 +41,6 @@ O script oferece uma interface de menu amigável e segura, ideal tanto para inic
 ### Aparência do Menu
 ```
 #!/bin/bash
-
-# =================================================================================
-# Script com Menu Interativo e Cabeçalho Dinâmico para Gerenciar o Firewall UFW
-# =================================================================================
-#
-# DESCRIÇÃO:
-# Este script fornece uma interface de menu para gerenciar o UFW. 
-#
-# =================================================================================
-
 VERDE='\033[0;32m'
 AMARELO='\033[1;33m'
 CIANO='\033[0;36m'
