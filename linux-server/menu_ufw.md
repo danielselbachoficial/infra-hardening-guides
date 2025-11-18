@@ -16,9 +16,9 @@ O script oferece uma interface de menu amigável e segura, ideal tanto para inic
 
 -   Um shell `bash` (padrão na maioria dos sistemas Linux).
 -   Privilégios de `sudo`.
--   O pacote `ufw` instalado no sistema. Se não tiver, instale com:
+-   Atualizar a lista de pacotes com:
     ```bash
-    sudo apt update && sudo apt install ufw
+    sudo apt update
     ```
 
 ## Como Usar
